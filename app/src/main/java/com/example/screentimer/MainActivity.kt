@@ -6,6 +6,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
 import android.os.PowerManager
 import android.os.PowerManager.WakeLock
 import android.util.Log
@@ -63,31 +64,38 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun lockPhone(view: View?) {
-        Thread(Runnable { kotlin.run {
-            onOff()
-        } }).start()
+//        Thread(Runnable { kotlin.run {
+//            onOff()
+//        } }).start()
+        onOff()
     }
 
-   private fun onOff(){
+    private fun onOff() {
         val active = deviceManger.isAdminActive(compName)
         if (active) {
 
             deviceManger.lockNow()
 
-            Thread.sleep(30000)
+            Handler().postDelayed(Runnable {
+                kotlin.run {
+                    newKeyguardLock.disableKeyguard();
 
-            newKeyguardLock.disableKeyguard();
 
+                    //acquire will turn on the display
+                    wakeLock.acquire()
 
-            //acquire will turn on the display
-            wakeLock.acquire()
+                    //release will release the lock from CPU, in case of that, screen will go back to sleep mode in defined time bt device settings
+                    wakeLock.release()
+                }
+            }, 30000)
 
-            //release will release the lock from CPU, in case of that, screen will go back to sleep mode in defined time bt device settings
-            wakeLock.release()
+//            Thread.sleep(30000)
+
         } else {
             enablePhone()
         }
     }
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, @Nullable data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         when (requestCode) {
